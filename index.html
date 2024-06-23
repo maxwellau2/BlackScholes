@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSM Option Pricing Model</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        .slider-label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5 mb-4">Black-Scholes-Merton Option Pricing Model</h1>
+        
+        <!-- Sliders and Text Inputs -->
+        <div class="row">
+            <div class="col-md-6">
+                <label for="assetPrice" class="slider-label">Asset Price (S): <span id="assetPriceVal">100</span></label>
+                <input type="range" class="form-control" id="assetPrice" min="10" max="300" step="1" value="100">
+                <input type="number" class="form-control mt-2" id="assetPriceInput" value="100">
+            </div>
+            <div class="col-md-6">
+                <label for="strikePrice" class="slider-label">Strike Price (K): <span id="strikePriceVal">100</span></label>
+                <input type="range" class="form-control" id="strikePrice" min="10" max="300" step="1" value="100">
+                <input type="number" class="form-control mt-2" id="strikePriceInput" value="100">
+            </div>
+            <div class="col-md-6">
+                <label for="timeToExpiry" class="slider-label">Time to Expiry (T): <span id="timeToExpiryVal">1</span> years</label>
+                <input type="range" class="form-control" id="timeToExpiry" min="0.01" max="5" step="0.01" value="1">
+                <input type="number" class="form-control mt-2" id="timeToExpiryInput" value="1">
+            </div>
+            <div class="col-md-6">
+                <label for="riskFreeRate" class="slider-label">Risk-Free Interest Rate (r): <span id="riskFreeRateVal">0.05</span></label>
+                <input type="range" class="form-control" id="riskFreeRate" min="0.00" max="0.20" step="0.01" value="0.05">
+                <input type="number" class="form-control mt-2" id="riskFreeRateInput" value="0.05">
+            </div>
+            <div class="col-md-6">
+                <label for="volatility" class="slider-label">Volatility (σ): <span id="volatilityVal">0.2</span></label>
+                <input type="range" class="form-control" id="volatility" min="0.01" max="1" step="0.01" value="0.2">
+                <input type="number" class="form-control mt-2" id="volatilityInput" value="0.2">
+            </div>
+        </div>
+
+        <!-- Result Display -->
+        <div class="result-box mt-4">
+            <h4>BSM Calculation Results:</h4>
+            <p><strong>d1:</strong> <span id="d1Result">-</span></p>
+            <p><strong>d2:</strong> <span id="d2Result">-</span></p>
+            <p><strong>Call Option Price (C):</strong> <span id="callPriceResult">-</span></p>
+            <p><strong>Put Option Price (P):</strong> <span id="putPriceResult">-</span></p>
+        </div>
+    </div>
+
+    <!-- Bootstrap and JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Math.js and jStat Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.4/math.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Function to calculate BSM option prices
+        function calculateBSM() {
+            let S = parseFloat(document.getElementById('assetPrice').value);
+            let K = parseFloat(document.getElementById('strikePrice').value);
+            let T = parseFloat(document.getElementById('timeToExpiry').value);
+            let r = parseFloat(document.getElementById('riskFreeRate').value);
+            let vol = parseFloat(document.getElementById('volatility').value);
+
+            let d1 = (math.log(S / K) + (r + (math.pow(vol, 2) / 2)) * T) / (vol * math.sqrt(T));
+            let d2 = d1 - vol * math.sqrt(T);
+
+            let C = S * jStat.normal.cdf(d1, 0, 1) - K * math.exp(-r * T) * jStat.normal.cdf(d2, 0, 1);
+            let P = K * math.exp(-r * T) * jStat.normal.cdf(-d2, 0, 1) - S * jStat.normal.cdf(-d1, 0, 1);
+
+            document.getElementById('d1Result').innerText = d1.toFixed(4);
+            document.getElementById('d2Result').innerText = d2.toFixed(4);
+            document.getElementById('callPriceResult').innerText = C.toFixed(4);
+            document.getElementById('putPriceResult').innerText = P.toFixed(4);
+        }
+
+        // Synchronize sliders with text inputs
+        function syncInputs(sliderId, inputId, labelId) {
+            let slider = document.getElementById(sliderId);
+            let input = document.getElementById(inputId);
+            let label = document.getElementById(labelId);
+
+            slider.addEventListener('input', function() {
+                label.innerText = slider.value;
+                input.value = slider.value;
+                calculateBSM();
+            });
+
+            input.addEventListener('input', function() {
+                slider.value = input.value;
+                label.innerText = input.value;
+                calculateBSM();
+            });
+        }
+
+        // Initialize the sync and calculation
+        window.onload = function() {
+            syncInputs('assetPrice', 'assetPriceInput', 'assetPriceVal');
+            syncInputs('strikePrice', 'strikePriceInput', 'strikePriceVal');
+            syncInputs('timeToExpiry', 'timeToExpiryInput', 'timeToExpiryVal');
+            syncInputs('riskFreeRate', 'riskFreeRateInput', 'riskFreeRateVal');
+            syncInputs('volatility', 'volatilityInput', 'volatilityVal');
+            calculateBSM(); // Initial calculation with default values
+        }
+    </script>
+</body>
+</html>
